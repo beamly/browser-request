@@ -20,6 +20,24 @@ request.log = {
 
 var DEFAULT_TIMEOUT = 3 * 60 * 1000 // 3 minutes
 
+if (typeof Object.create != 'function') {
+  Object.create = (function() {
+    var Temp = function() {};
+    return function (prototype) {
+      if (arguments.length > 1) {
+        throw Error('Second argument not supported');
+      }
+      if (typeof prototype != 'object') {
+        throw TypeError('Argument must be an object');
+      }
+      Temp.prototype = prototype;
+      var result = new Temp();
+      Temp.prototype = null;
+      return result;
+    };
+  })();
+}
+
 //
 // request
 //
@@ -32,14 +50,10 @@ function request(options, callback) {
   if(!options)
     throw new Error('No options given')
 
-  var options_onResponse = options.onResponse; // Save this for later.
-
   if(typeof options === 'string')
     options = {'uri':options};
   else
-    options = JSON.parse(JSON.stringify(options)); // Use a duplicate for mutating.
-
-  options.onResponse = options_onResponse // And put it back.
+    options = Object.create(options);  // Use a duplicate for mutating.
 
   if (options.verbose) request.log = getLogger();
 
